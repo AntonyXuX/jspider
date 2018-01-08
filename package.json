@@ -1,0 +1,9 @@
+{
+  "name": "jspider",
+  "version": "0.0.1",
+  "author": "Antony",
+  "dependencies": {
+    "queue": "^4.4.2",
+    "puppeteer": "git+https://github.com/GoogleChrome/puppeteer.git"
+  }
+}
