@@ -1,17 +1,22 @@
 const puppeteer = require('puppeteer');
 
-class Url {
+async function sleep(ms) {
+  return await new Promise(resolve => setTimeout(resolve, ms))
+}
+
+class Record {
     constructor() {
         this.url = "";
         this.startTime = "";
         this.endTime = "";
-        this.flag = false;
+        this.status = 0;
+        this.length = 0;
     }
 }
 
-class Page {
+class Target {
     constructor() {
-        this.urlsDownloadInfo = [];
+        this.recordsInfo = [];
         this.page = {};
         this.flag = true;
     }
@@ -21,58 +26,80 @@ class Downloader {
 
     constructor() {
         this.browser = {};
-        this.pages = [];
+        this.targets = [];
     }
 
     async init() {
         await this.initBrowser();
-        await this.initPages();
+        await this.initTargets();
     }
 
     async initBrowser() {
         this.browser = await this._openBrowser();
     }
 
-    async initPages() {
-        await Promise.all([this.initPage(),this.initPage(),this.initPage()]);
+    async initTargets() {
+        await Promise.all([this.initTarget(),this.initTarget(),this.initTarget()]);
     }
 
-    getPage() {
-        for(let page of this.pages) {
-            if(page.flag){
-                return page;
+    async getTarget() {
+        while (true){
+            for(let target of this.targets) {
+                if(target.flag){
+                    target.flag = false;
+                    return target;
+                }
             }
+            console.info("@@@@ null @@@@");
+            await sleep(1000);
         }
-        return null;
     }
 
-    async initPage() {
-        var page = new Page();
-        page.page = await this._openPage();
-        this.pages.push(page);
+    async initTarget() {
+        var target = new Target();
+        target.page = await this._openTarget();
+        this.targets.push(target);
     }
 
     async _openBrowser() {
         return await puppeteer.launch({args: ['--no-sandbox']});
     }
 
-    async _openPage() {
+    async _openTarget() {
         return await this.browser.newPage();
     }
     
-    async closePage(page) {
-        await page.close();
+    async closeTarget(target) {
+        await target.page.close();
     }
 
     async closeBrowser() {
         await this.browser.close();
     }
 
-    async download(page,url) {
+    async download(target,url) {
         if (url == "" || url == null) 
             return null;
-        await page.page.goto(url);
-        var content = await page.page.content();
+        let record = new Record();
+        record.url = url;
+        record.startTime = new Date().getTime();
+        var content = "";
+        var response = {};
+        try {
+            response = await target.page.goto(url);
+            content = await target.page.content();
+            record.status = response.status();
+//            let metrics = await target.page.metrics();
+//            console.info(metrics);
+        } catch (error) {
+            content = "";
+            console.info("@@@@@",error,"@@@@@");
+        }
+        record.endTime = new Date().getTime();
+        record.length = content.length;
+        target.recordsInfo.push(record);
+        target.flag = true;
+        console.info(record);
         return content;
     }
 }
