@@ -1,4 +1,4 @@
-const Downloader = require('./Downloader');
+const Downloader = require('../Downloader');
 
 (async () => {
     console.info(new Date().getTime());

@@ -4,6 +4,9 @@ async function sleep(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
+/**
+ * 记录一条下载信息，用于后续分析站点下载质量
+ */
 class Record {
     constructor() {
         this.url = "";
@@ -14,14 +17,21 @@ class Record {
     }
 }
 
+/**
+ * 浏览器标签，记录下载信息，判断当前标签是否可用
+ */
 class Target {
-    constructor() {
+    constructor(name) {
+        this.name = name;
         this.recordsInfo = [];
         this.page = {};
         this.flag = true;
     }
 }
 
+/**
+ * 下载器，包含一个浏览器对象和n个浏览器标签
+ */
 class Downloader {
 
     constructor() {
@@ -39,7 +49,7 @@ class Downloader {
     }
 
     async initTargets() {
-        await Promise.all([this.initTarget(),this.initTarget(),this.initTarget()]);
+        await Promise.all([this.initTarget("target1"),this.initTarget("target2"),this.initTarget("target3")]);
     }
 
     async getTarget() {
@@ -55,8 +65,8 @@ class Downloader {
         }
     }
 
-    async initTarget() {
-        var target = new Target();
+    async initTarget(name) {
+        var target = new Target(name);
         target.page = await this._openTarget();
         this.targets.push(target);
     }
@@ -98,6 +108,7 @@ class Downloader {
         record.endTime = new Date().getTime();
         record.length = content.length;
         target.recordsInfo.push(record);
+        console.info("@@@  ",target.name," length:",target.recordsInfo.length,"  @@@");
         target.flag = true;
         console.info(record);
         return content;
